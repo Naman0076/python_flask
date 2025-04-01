@@ -1,14 +1,19 @@
+import os
 from flask import Flask, render_template, redirect, url_for, flash
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from sqlalchemy.orm import Session
 from forms.login_form import LoginForm
 from forms.register_form import RegisterForm
 from models.users import init_models, User, db
+from dotenv import load_dotenv  # Import dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'ff1ac0728c08d201aa01a8b13ff07e0c'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')  # Load secret key from .env
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')  # Load database URI from .env
+
 db.init_app(app)
 
 login_manager = LoginManager(app)
@@ -20,14 +25,12 @@ def load_user(user_id):
     with Session(db.engine) as session:
         return session.get(User, int(user_id))
 
-
 @app.route('/')
 @login_required
 def index():
     if not current_user.is_authenticated:
         return redirect(url_for('login'))
     return render_template('index.html', title='Dashboard', username=current_user.username)
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -37,20 +40,18 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
-            login_user(user, remember=True)  # Add remember=True parameter
+            login_user(user, remember=True)
             flash('Logged in successfully!', 'success')
             return redirect(url_for('index'))
         else:
             flash('Invalid username or password', 'danger')
     return render_template('login.html', form=form)
 
-
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -64,6 +65,5 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
-
 if __name__ == '__main__':
-    app.run(debug=True, port = 8000)
+    app.run(debug=True, port=8000)
