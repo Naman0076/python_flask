@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from forms.login_form import LoginForm
 from forms.register_form import RegisterForm
 from models.users import init_models, User, db
-from dotenv import load_dotenv  # Import dotenv
+from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
