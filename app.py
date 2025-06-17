@@ -6,6 +6,8 @@ from forms.login_form import LoginForm
 from forms.register_form import RegisterForm
 from models.users import init_models, User, db
 from dotenv import load_dotenv
+import configure_logging 
+import logging
 
 # Load environment variables from .env file
 load_dotenv()
@@ -13,6 +15,7 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')  # Load secret key from .env
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')  # Load database URI from .env
+logging.info("configuring flask secret key and SQL database")
 
 db.init_app(app)
 
@@ -31,6 +34,7 @@ def index():
     if not current_user.is_authenticated:
         return redirect(url_for('login'))
     return render_template('index.html', title='Dashboard', username=current_user.username)
+logging.info("requesting base endpoint")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -42,9 +46,11 @@ def login():
         if user and user.check_password(form.password.data):
             login_user(user, remember=True)
             flash('Logged in successfully!', 'success')
+            logging.info("login successfull")
             return redirect(url_for('index'))
         else:
             flash('Invalid username or password', 'danger')
+            logging.error("login error invalid username or password")
     return render_template('login.html', form=form)
 
 @app.route('/logout')
@@ -52,6 +58,7 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+logging.info("requesting /logout endpoint")
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -64,6 +71,8 @@ def register():
         flash('Registration successful! Please log in.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
+logging.info("requesting /register endpoint to register a new user")
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)
+logging.info("running the app")
